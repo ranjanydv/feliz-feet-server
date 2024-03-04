@@ -1,0 +1,7 @@
+
+# Node Modules Folder
+node_modules
+
+#IDE Generated Folders
+.idea/
+.vscode/
