@@ -35,12 +35,12 @@ module.exports = (sequelize, DataTypes) => {
 
   Product.associate = function (models) {
     Product.belongsTo(models.user, {
-      foreignKey: "user_id",
-      as: "merchant",
+      foreignKey: 'user_id',
+      as: 'merchant',
     });
     Product.belongsTo(models.product_image, {
-      foreignKey: "image_id",
-      as: "image",
+      foreignKey: 'image_id',
+      as: 'image',
     });
     // Product.hasMany(models.product_image, {
     //   foreignKey: {
@@ -50,6 +50,14 @@ module.exports = (sequelize, DataTypes) => {
     //   onDelete: "RESTRICT",
     //   as: "images",
     // });
+    Product.hasMany(models.cart, {
+      foreignKey: {
+        name: 'product_id',
+        allowNull: false,
+      },
+      onDelete: 'RESTRICT',
+      as: 'product',
+    });
   };
 
   Product.findById = (id) =>

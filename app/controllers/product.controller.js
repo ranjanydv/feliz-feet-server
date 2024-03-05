@@ -2,10 +2,8 @@ const { Op } = require('sequelize');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }).single('file');
 
-const { product: Product, sequelize, user: User,product_image:ProductImage } = require('../models');
+const { product: Product, sequelize, Sequelize, user: User, product_image: ProductImage, cart: Cart } = require('../models');
 const ProductValidation = require('../validators/product.validator');
-const path = require('path');
-const { base_url } = require('../lib/global');
 
 
 async function productList(req, res, next) {
@@ -145,15 +143,50 @@ async function deleteProduct(req, res, next) {
     if (!validator.validate({ ...params })) {
       return res.status(400).json({ status: 400, message: 'Validation failed', errors: validator.errors });
     }
+    const databaseProduct = await Product.findById(params.id);
 
     // Start a transaction
     await sequelize.transaction(async (t) => {
-      // Delete the brand itself
       await Product.destroy({ where: { id: productId } }, { transaction: t });
+      await ProductImage.destroy({ where: { id: databaseProduct.image_id } }, { transaction: t });
+    }, { autocommit: false }).then(async () => {
+      res.json({
+        status: 200,
+        message: 'Product and its image has been deleted successfully',
+      });
     });
-
   } catch (error) {
-    next(error);
+    // 3. Specific error handling:
+    if (error instanceof Sequelize.ForeignKeyConstraintError) {
+      // Check for associated product & purchase
+      let errorMessage = 'Cannot delete product due to associated records in: ';
+
+      // const product = await Product.findAll({ where: { supplier_id: params.id } });
+      // const purchase = await Purchase.findAll({ where: { supplier_id: params.id } });
+      //
+      // let associatedTables = [];
+      //
+      // // Check constraints and add to the associatedTables array
+      // if (product.length > 0) associatedTables.push('products');
+      // if (purchase.length > 0) associatedTables.push('purchases');
+      //
+      // if (associatedTables.length > 1) {
+      //   let last = associatedTables.pop();
+      //   errorMessage += associatedTables.join(', ') + ' and ' + last;
+      // } else {
+      //   errorMessage += associatedTables[0];
+      // }
+      // errorMessage += '.';
+      //
+
+      return res.status(400).json({
+        status: 400,
+        message: errorMessage
+      });
+    } else {
+      // Handle other unexpected errors by passing them to the next middleware.
+      next(error);
+    }
   }
 }
 
@@ -167,8 +200,8 @@ async function uploadProductImage(req, res, next) {
         const file = req.file;
         const data = {
           file: `${file.filename}`,
-        }
-        const productImage = await ProductImage.create(data)
+        };
+        const productImage = await ProductImage.create(data);
         res.status(201).json({ status: 200, message: 'Product Image Created', productImage });
       }
     });
@@ -177,6 +210,78 @@ async function uploadProductImage(req, res, next) {
   }
 }
 
+
+async function listCartProductsByUser(req, res, next) {
+  try {
+    const { query, currentUser, params } = req;
+    const validator = new ProductValidation({}, 'list');
+
+    if (validator.validate(query, params)) {
+      const { page = 0, limit = 0, query = '' } = validator.value;
+      const offset = (page - 1) * limit;
+      const condition = { user_id: params.id };
+      const clause = {};
+      if (limit) {
+        clause.limit = limit;
+      }
+      if (offset) {
+        clause.offset = offset;
+      }
+      if (query) {
+        condition.username = {
+          [Op.like]: `%${query}%`,
+        };
+      }
+
+      const { count, rows: data } = await Cart.findAndCountAll({
+        where: condition, order: [['updated_at', 'DESC']], ...clause,
+        include: [{ model: Product, as: 'product' }],
+      });
+      if (count === 0) res.status(200).json({ message: 'Cart is empty' });
+      return res.json({ count, data });
+    }
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function addProductToCart(req, res, next) {
+  try {
+    const { body } = req;
+    const productExists = await Product.findById(body.product_id);
+    if (!productExists) {
+      return res.status(400).send({ status: 400, message: 'Product Does Not Exist!!!' });
+    }
+    const data = {
+      user_id: body.user_id,
+      quantity: body.quantity,
+      price: body.price,
+      product_id: body.product_id,
+    };
+
+    const cartData = await Cart.create(data);
+    res.status(201).send({ message: 'Added to Cart', product: cartData, });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function removeProductFromCart(req, res, next) {
+  try {
+    const { params } = req;
+    const { count, rows: data } = await Cart.findAndCountAll({
+      where: { user_id: params.userId}, order: [['updated_at', 'DESC']],
+      include: [{ model: Product, as: 'product' }],
+    });
+    if (count === 0) return res.json({ status: 400, message: 'Cart Empty' });
+    const result = await Cart.destroy({ where: { id: params.id } });
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 module.exports = {
   createProduct,
   productList,
@@ -184,4 +289,7 @@ module.exports = {
   updateProduct,
   deleteProduct,
   uploadProductImage,
+  listCartProductsByUser,
+  addProductToCart,
+  removeProductFromCart,
 };
