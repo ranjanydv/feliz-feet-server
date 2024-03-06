@@ -11,6 +11,7 @@ app.post('/', authenticateUser, controller.createOrder);
 // app.post('/cart', authenticateUser, controller.addProductToCart);
 // app.get('/:id', controller.productListByUser);
 app.patch('/:id', authenticateUser, controller.updateOrder);
+app.patch('/cancel/:id', authenticateUser, controller.cancelOrder);
 // app.delete('/:id', authenticateUser, controller.deleteProduct);
 // app.delete('/cart/byuser/:userId/:id', authenticateUser, controller.removeProductFromCart);
 

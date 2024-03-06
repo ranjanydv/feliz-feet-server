@@ -1,7 +1,6 @@
-const { Op, where } = require('sequelize');
+const { Op } = require('sequelize');
 
 const {
-  product: Product,
   sequelize,
   Sequelize,
   order: Order,
@@ -141,6 +140,8 @@ async function createOrder(req, res, next) {
       const createdOrderProducts = await OrderProducts.create(productData);
       responseData.products.push(createdOrderProducts);
     }
+
+    // TODO: Remove Products from Cart
     res.status(201).send({ message: 'Order Placed', order: responseData, });
   } catch (error) {
     next(error);
@@ -185,7 +186,7 @@ async function cancelOrder(req, res, next) {
     });
     if (!orderExits) return res.status(400).json({ status: 400, message: 'Cannot cancel order' });
     const orderData = {
-      state: 2
+      state: 3
     };
     await Order.update(orderData, { where: { id: params.id } });
     res.status(200).json({ message: 'Order Cancelled' });
@@ -200,5 +201,6 @@ module.exports = {
   getOrdersByUser,
   getOrdersByProduct,
   createOrder,
-  updateOrder
+  updateOrder,
+  cancelOrder
 };
