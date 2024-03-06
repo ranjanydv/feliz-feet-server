@@ -10,7 +10,7 @@ app.post('/', authenticateUser, controller.createOrder);
 // app.post('/upload', authenticateUser, controller.uploadProductImage);
 // app.post('/cart', authenticateUser, controller.addProductToCart);
 // app.get('/:id', controller.productListByUser);
-// app.patch('/:id', authenticateUser, controller.updateProduct);
+app.patch('/:id', authenticateUser, controller.updateOrder);
 // app.delete('/:id', authenticateUser, controller.deleteProduct);
 // app.delete('/cart/byuser/:userId/:id', authenticateUser, controller.removeProductFromCart);
 

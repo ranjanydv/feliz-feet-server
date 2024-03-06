@@ -1,16 +1,13 @@
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 
 const {
   product: Product,
   sequelize,
   Sequelize,
-  user: User,
   order: Order,
   order_products: OrderProducts,
   cart: Cart,
-  ProductImage
 } = require('../models');
-const ProductValidation = require('../validators/product.validator');
 const OrderValidator = require('../validators/order.validator');
 
 async function getOrders(req, res, next) {
@@ -114,7 +111,6 @@ async function getOrdersByProduct(req, res, next) {
   }
 }
 
-
 async function createOrder(req, res, next) {
   try {
     const { body } = req;
@@ -152,10 +148,57 @@ async function createOrder(req, res, next) {
   }
 }
 
+async function updateOrder(req, res, next) {
+  try {
+    const { body, params } = req;
+    const orderExits = await Order.findOne({
+      where: {
+        id: params.id,
+        [Op.and]: [
+          { state: { [Op.ne]: 2 } },
+          { state: { [Op.ne]: 3 } }
+        ],
+      }
+    });
+    if (!orderExits) return res.status(400).json({ status: 400, message: 'Cannot update order' });
+    const orderData = {
+      state: body.state
+    };
+    await Order.update(orderData, { where: { id: params.id } });
+    res.status(200).json({ message: 'Order updated' });
+  } catch (error) {
+    next(error);
+    res.status(500).json({ status: 400, message: 'Something went wrong' });
+  }
+}
+
+async function cancelOrder(req, res, next) {
+  try {
+    const { params } = req;
+    const orderExits = await Order.findOne({
+      where: {
+        id: params.id,
+        [Op.and]: [
+          { state: { [Op.ne]: 2 } },
+        ],
+      }
+    });
+    if (!orderExits) return res.status(400).json({ status: 400, message: 'Cannot cancel order' });
+    const orderData = {
+      state: 2
+    };
+    await Order.update(orderData, { where: { id: params.id } });
+    res.status(200).json({ message: 'Order Cancelled' });
+  } catch (error) {
+    next(error);
+    res.status(500).json({ status: 400, message: 'Something went wrong' });
+  }
+}
 
 module.exports = {
   getOrders,
   getOrdersByUser,
   getOrdersByProduct,
   createOrder,
+  updateOrder
 };
