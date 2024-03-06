@@ -245,6 +245,23 @@ async function listCartProductsByUser(req, res, next) {
   }
 }
 
+async function singleCartProductsByUser(req, res, next) {
+  try {
+    const { params } = req;
+    const cartItem = await Cart.findOne({
+      where: {
+        id: params.id,
+        user_id: params.userId,
+      },
+      include: [{ model: Product, as: 'product' }]
+    });
+    if (!cartItem) return res.status(404).send({ status: 400, message: 'Cart Item not found' });
+    return res.status(200).json({ cartItem });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function addProductToCart(req, res, next) {
   try {
     const { body } = req;
@@ -269,13 +286,15 @@ async function addProductToCart(req, res, next) {
 async function removeProductFromCart(req, res, next) {
   try {
     const { params } = req;
-    const { count, rows: data } = await Cart.findAndCountAll({
-      where: { user_id: params.userId}, order: [['updated_at', 'DESC']],
-      include: [{ model: Product, as: 'product' }],
-    });
-    if (count === 0) return res.json({ status: 400, message: 'Cart Empty' });
+    const isUserCart = await Cart.findById(params.id);
+    if (isUserCart) {
+      const cartUserId = isUserCart.user_id.toString();
+      if (cartUserId !== params.userId) {
+        return res.status(400).send({ status: 400, message: 'Not Your Product', });
+      }
+    }
     const result = await Cart.destroy({ where: { id: params.id } });
-    res.status(201).json(result);
+    return res.status(201).json(result);
   } catch (error) {
     next(error);
   }
@@ -290,6 +309,7 @@ module.exports = {
   deleteProduct,
   uploadProductImage,
   listCartProductsByUser,
+  singleCartProductsByUser,
   addProductToCart,
   removeProductFromCart,
 };

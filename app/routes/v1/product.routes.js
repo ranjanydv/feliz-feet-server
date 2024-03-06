@@ -3,8 +3,8 @@ const controller = require('../../controllers/product.controller');
 const { authenticateUser } = require('../../middleware');
 
 app.get('/', controller.productList);
-// app.get("/:id", controller.getUser);
 app.get('/cart/byuser/:id', authenticateUser, controller.listCartProductsByUser);
+app.get('/cart/byuser/:userId/:id', authenticateUser, controller.singleCartProductsByUser);
 app.post('/', authenticateUser, controller.createProduct);
 app.post('/upload', authenticateUser, controller.uploadProductImage);
 app.post('/cart', authenticateUser, controller.addProductToCart);
