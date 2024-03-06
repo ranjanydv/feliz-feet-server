@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const config = require('../config/auth.config');
-const { user: User, Sequelize } = require('../models');
+const { user: User, Sequelize,cart:Cart } = require('../models');
 const UserValidator = require('../validators/user.validator');
 
 // const Op = Sequelize.Op;
@@ -42,7 +42,10 @@ async function signUp(req, res, next) {
 
     // Rest of the users will be assigned USER Role by Default
     const userData = await User.create(user);
-    res.status(201).send({ message: 'User account Created', user: userData, });
+    if(userData){
+      const createdCartForUser = await Cart.create({user_id:userData.id})
+    }
+    res.status(201).send({ message: 'User account Created', user: userData,cart:"Cart Initialized" });
   } catch (error) {
     next(error);
   }

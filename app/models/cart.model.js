@@ -8,13 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      quantity: {
+      user_id: {
+        allowNull: false,
         type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
+        unique: true,
       },
     },
     {}
@@ -25,19 +22,19 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "user_id",
       as: "user",
     });
-    Cart.belongsTo(models.product, {
-      foreignKey: "product_id",
-      as: "product",
-    });
-
-    // Cart.hasMany(models.product, {
-    //   foreignKey: {
-    //     name: "product_id",
-    //     allowNull: false,
-    //   },
-    //   onDelete: "RESTRICT",
-    //   as: "products",
+    // Cart.belongsTo(models.product, {
+    //   foreignKey: "product_id",
+    //   as: "product",
     // });
+
+    Cart.hasMany(models.cart_products, {
+      foreignKey: {
+        name: 'cart_id',
+        allowNull: false,
+      },
+      onDelete: 'RESTRICT',
+      as: 'cart_products',
+    });
   };
 
   Cart.findById = (id) =>
