@@ -5,7 +5,6 @@ const {
   Sequelize,
   order: Order,
   order_products: OrderProducts,
-  cart: Cart,
 } = require('../models');
 const OrderValidator = require('../validators/order.validator');
 
@@ -32,7 +31,6 @@ async function getOrders(req, res, next) {
       }
       const { count, rows: data } = await Order.findAndCountAll({
         where: condition, order: [['updated_at', 'DESC']], ...clause,
-        include: [{ model: OrderProducts, as: 'products' }],
       });
       return res.json({ count, data });
     } else {
@@ -66,7 +64,7 @@ async function getOrdersByUser(req, res, next) {
       }
       const { count, rows: data } = await Order.findAndCountAll({
         where: condition, order: [['updated_at', 'DESC']], ...clause,
-        include: [{ model: OrderProducts, as: 'products' }],
+        include: [{ model: OrderProducts, as: 'order_products' }],
       });
       return res.json({ count, data });
     } else {
@@ -85,7 +83,7 @@ async function getOrdersByProduct(req, res, next) {
     if (validator.validate(query, params)) {
       const { page = 0, limit = 0, query = '' } = validator.value;
       const offset = (page - 1) * limit;
-      const condition = { user_id: params.id };
+      const condition = { product_id: params.id };
       const clause = {};
       if (limit) {
         clause.limit = limit;
@@ -98,7 +96,7 @@ async function getOrdersByProduct(req, res, next) {
           [Op.like]: `%${query}%`,
         };
       }
-      const { count, rows: data } = await Order.findAndCountAll({
+      const { count, rows: data } = await OrderProducts.findAndCountAll({
         where: condition, order: [['updated_at', 'DESC']], ...clause,
       });
       return res.json({ count, data });

@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
         name: 'product_id',
         allowNull: false
       },
-      as: 'product',
+      as: 'products',
     });
 
   };

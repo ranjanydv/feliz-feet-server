@@ -48,22 +48,23 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'image_id',
       as: 'image',
     });
-    // Product.hasMany(models.product_image, {
-    //   foreignKey: {
-    //     name: "product_id",
-    //     allowNull: false,
-    //   },
-    //   onDelete: "RESTRICT",
-    //   as: "images",
-    // });
-    Product.hasMany(models.cart, {
+    Product.hasMany(models.order_products, {
       foreignKey: {
-        name: 'product_id',
+        name: "product_id",
         allowNull: false,
       },
-      onDelete: 'RESTRICT',
-      as: 'product',
+      onDelete: "RESTRICT",
+      as: "order_products",
     });
+    Product.hasMany(models.cart_products, {
+      foreignKey: {
+        name: "product_id",
+        allowNull: false,
+      },
+      onDelete: "RESTRICT",
+      as: "cart_products",
+    });
+
   };
 
   Product.findById = (id) =>

@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }).single('file');
 
-const { product: Product, sequelize, Sequelize, user: User, product_image: ProductImage, cart: Cart } = require('../models');
+const { product: Product, sequelize, Sequelize, user: User, product_image: ProductImage } = require('../models');
 const ProductValidation = require('../validators/product.validator');
 
 
@@ -211,95 +211,6 @@ async function uploadProductImage(req, res, next) {
 }
 
 
-async function listCartProductsByUser(req, res, next) {
-  try {
-    const { query, currentUser, params } = req;
-    const validator = new ProductValidation({}, 'list');
-
-    if (validator.validate(query, params)) {
-      const { page = 0, limit = 0, query = '' } = validator.value;
-      const offset = (page - 1) * limit;
-      const condition = { user_id: params.id };
-      const clause = {};
-      if (limit) {
-        clause.limit = limit;
-      }
-      if (offset) {
-        clause.offset = offset;
-      }
-      if (query) {
-        condition.username = {
-          [Op.like]: `%${query}%`,
-        };
-      }
-
-      const { count, rows: data } = await Cart.findAndCountAll({
-        where: condition, order: [['updated_at', 'DESC']], ...clause,
-        include: [{ model: Product, as: 'product' }],
-      });
-      if (count === 0) res.status(200).json({ message: 'Cart is empty' });
-      return res.json({ count, data });
-    }
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function singleCartProductsByUser(req, res, next) {
-  try {
-    const { params } = req;
-    const cartItem = await Cart.findOne({
-      where: {
-        id: params.id,
-        user_id: params.userId,
-      },
-      include: [{ model: Product, as: 'product' }]
-    });
-    if (!cartItem) return res.status(404).send({ status: 400, message: 'Cart Item not found' });
-    return res.status(200).json({ cartItem });
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function addProductToCart(req, res, next) {
-  try {
-    const { body } = req;
-    const productExists = await Product.findById(body.product_id);
-    if (!productExists) {
-      return res.status(400).send({ status: 400, message: 'Product Does Not Exist!!!' });
-    }
-    const data = {
-      user_id: body.user_id,
-      quantity: body.quantity,
-      price: body.price,
-      product_id: body.product_id,
-    };
-
-    const cartData = await Cart.create(data);
-    res.status(201).send({ message: 'Added to Cart', product: cartData, });
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function removeProductFromCart(req, res, next) {
-  try {
-    const { params } = req;
-    const isUserCart = await Cart.findById(params.id);
-    if (isUserCart) {
-      const cartUserId = isUserCart.user_id.toString();
-      if (cartUserId !== params.userId) {
-        return res.status(400).send({ status: 400, message: 'Not Your Product', });
-      }
-    }
-    const result = await Cart.destroy({ where: { id: params.id } });
-    return res.status(201).json(result);
-  } catch (error) {
-    next(error);
-  }
-}
-
 
 module.exports = {
   createProduct,
@@ -308,8 +219,4 @@ module.exports = {
   updateProduct,
   deleteProduct,
   uploadProductImage,
-  listCartProductsByUser,
-  singleCartProductsByUser,
-  addProductToCart,
-  removeProductFromCart,
 };

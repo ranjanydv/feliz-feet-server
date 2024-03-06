@@ -25,8 +25,11 @@ app.use("/users", require("./user.routes"));
 // product routes
 app.use("/products", require("./product.routes"));
 
-// product routes
+// order routes
 app.use("/orders", require("./order.routes"));
+
+// cart routes
+app.use("/cart", require("./cart.routes"));
 
 
 module.exports = app;

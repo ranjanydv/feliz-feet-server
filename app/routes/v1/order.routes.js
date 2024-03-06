@@ -3,16 +3,10 @@ const controller = require('../../controllers/order.controller');
 const { authenticateUser } = require('../../middleware');
 
 app.get('/', controller.getOrders);
-app.get('/cart/byuser/:id', authenticateUser, controller.getOrdersByUser);
-app.get('/cart/byproduct/:id', authenticateUser, controller.getOrdersByProduct);
-// app.get('/cart/byuser/:userId/:id', authenticateUser, controller.singleCartProductsByUser);
+app.get('/byuser/:id', controller.getOrdersByUser);
+app.get('/byproduct/:id', controller.getOrdersByProduct);
 app.post('/', authenticateUser, controller.createOrder);
-// app.post('/upload', authenticateUser, controller.uploadProductImage);
-// app.post('/cart', authenticateUser, controller.addProductToCart);
-// app.get('/:id', controller.productListByUser);
 app.patch('/:id', authenticateUser, controller.updateOrder);
 app.patch('/cancel/:id', authenticateUser, controller.cancelOrder);
-// app.delete('/:id', authenticateUser, controller.deleteProduct);
-// app.delete('/cart/byuser/:userId/:id', authenticateUser, controller.removeProductFromCart);
 
 module.exports = app;
