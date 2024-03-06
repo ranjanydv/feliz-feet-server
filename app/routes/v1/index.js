@@ -4,8 +4,8 @@ const bcrypt = require("bcryptjs");
 // database
 const db = require("../../models");
 
-db.sequelize.sync({force:true}).then(() => {});
-// db.sequelize.sync({alter:true}).then(() => {});
+// db.sequelize.sync({force:true}).then(() => {});
+db.sequelize.sync({alter:true}).then(() => {});
 // db.sequelize.sync({}).then(() => {});
 
 
@@ -24,6 +24,9 @@ app.use("/users", require("./user.routes"));
 
 // product routes
 app.use("/products", require("./product.routes"));
+
+// product routes
+app.use("/orders", require("./order.routes"));
 
 
 module.exports = app;

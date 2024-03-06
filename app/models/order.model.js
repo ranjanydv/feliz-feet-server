@@ -13,13 +13,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
       },
       total_amount: {
-        type: DataTypes.FLOAT,
         allowNull: false,
+        type: DataTypes.DECIMAL(10,2),
       },
       state: {
         type: DataTypes.TINYINT,
-        defaultValue: 1,
-        comment: '0 - PLACED, 1 - IN-PROGRESS, 2 - COMPLETED',
+        defaultValue: 0,
+        comment: '0 - PLACED, 1 - IN-PROGRESS, 2 - COMPLETED, 3 - CANCELLED',
       },
     },
     {}
@@ -30,10 +30,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'user_id',
       as: 'user',
     });
-    Order.belongsTo(models.product, {
-      foreignKey: 'product_id',
-      as: 'product',
-    });
+    // Order.belongsTo(models.product, {
+    //   foreignKey: 'product_id',
+    //   as: 'product',
+    // });
     Order.hasMany(models.order_products, {
       foreignKey: {
         name: 'product_id',

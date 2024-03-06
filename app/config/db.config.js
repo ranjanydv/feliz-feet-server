@@ -4,6 +4,7 @@ module.exports = {
   PASSWORD: "Ranjan@123",
   DB: "feliz_feet",
   dialect: "mysql",
+  logging: console.log,
   pool: {
     max: 5,
     min: 0,
