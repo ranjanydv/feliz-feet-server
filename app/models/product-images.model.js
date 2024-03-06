@@ -2,6 +2,12 @@ module.exports = (sequelize, DataTypes) => {
   const ProductImage = sequelize.define(
     'product_image',
     {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER,
+      },
       file: {
         type: DataTypes.STRING,
         allowNull: false,
