@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         unique: true,
       },
+      brand: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       description: {
         type: DataTypes.TEXT,
         allowNull: true,
@@ -26,8 +30,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       price: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(10,2),
         allowNull: false,
+      },
+      offer_price:{
+        type: DataTypes.DECIMAL(10,2),
+        allowNull: true,
       },
       state: {
         type: DataTypes.TINYINT,

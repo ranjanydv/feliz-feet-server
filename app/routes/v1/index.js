@@ -5,8 +5,8 @@ const bcrypt = require("bcryptjs");
 const db = require("../../models");
 
 // db.sequelize.sync({force:true}).then(() => {});
-db.sequelize.sync({alter:true}).then(() => {});
-// db.sequelize.sync({}).then(() => {});
+// db.sequelize.sync({alter:true}).then(() => {});
+db.sequelize.sync({}).then(() => {});
 
 
 app.get("/", (req, res) => {

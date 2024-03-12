@@ -30,6 +30,12 @@ app.use(function (req, res, next) {
         'Access-Control-Allow-Headers',
         'Origin, X-Requested-With, contentType,Content-Type, Accept, Authorization, x-access-token,'
     );
+    // Handle preflight requests
+    // if (req.method === 'OPTIONS') {
+    //     res.sendStatus(200);
+    // } else {
+    //     next();
+    // }
     next();
 });
 

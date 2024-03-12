@@ -1,6 +1,9 @@
 const { Op } = require('sequelize');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }).single('file');
+const fs = require('fs');
+const path = require('path');
+
 
 const { product: Product, sequelize, Sequelize, user: User, product_image: ProductImage } = require('../models');
 const ProductValidation = require('../validators/product.validator');
@@ -29,7 +32,7 @@ async function productList(req, res, next) {
       }
       const { count, rows: data } = await Product.findAndCountAll({
         where: condition, order: [['updated_at', 'DESC']], ...clause,
-        include: [{ model: ProductImage, as: 'productImage' }],
+        include: [{ model: ProductImage, as: 'image' }],
       });
       return res.json({ count, data });
     } else {
@@ -64,12 +67,31 @@ async function productListByUser(req, res, next) {
       }
       const { count, rows: data } = await Product.findAndCountAll({
         where: condition, order: [['updated_at', 'DESC']], ...clause,
-        include: [{ model: ProductImage, as: 'productImage' }],
+        include: [{ model: ProductImage, as: 'image' }],
       });
       return res.json({ count, data });
     } else {
       res.status(400).json({ status: 400, message: 'Could not fetch user list', errors: validator.errors });
     }
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function singleProduct(req, res, next) {
+  try {
+    const { params } = req;
+
+    const product = await Product.findOne({
+      where: {
+        url: params.url
+      },
+      include: [{ model: ProductImage, as: 'image' }],
+    });
+
+    if (!product) return res.status(404).send({ status: 404, message: 'Product Not Found' });
+    return res.status(200).json({ product });
+
   } catch (error) {
     next(error);
   }
@@ -201,6 +223,7 @@ async function uploadProductImage(req, res, next) {
         const data = {
           file: `${file.filename}`,
         };
+        console.log(file);
         const productImage = await ProductImage.create(data);
         res.status(201).json({ status: 200, message: 'Product Image Created', productImage });
       }
@@ -210,13 +233,31 @@ async function uploadProductImage(req, res, next) {
   }
 }
 
+// app.get('/images/:imageName', (req, res) => {
+async function getImage(req,res,next) {
+  const imagePath = path.join(__dirname, '../../uploads', req.params.imageName);
+  console.log(imagePath);
+   fs.readFile(imagePath, (err, data) => {
+    if (err) {
+      res.status(404).json({ error: 'Image not found' });
+    } else {
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.send(data);
+    }
+  });
+  // const imageStream = fs.createReadStream(imagePath);
+  // imageStream.on('error', () => res.status(404).json({ error: 'Image not founds' }));
+  // imageStream.pipe(res);
+};
 
 
 module.exports = {
   createProduct,
   productList,
   productListByUser,
+  singleProduct,
   updateProduct,
   deleteProduct,
   uploadProductImage,
+  getImage
 };

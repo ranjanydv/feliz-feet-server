@@ -55,19 +55,18 @@ async function signUp(req, res, next) {
 // Sign In Function
 async function signIn(req, res) {
   try {
-
     const user = await User.findOne({
       where: { username: req.body.username },
     });
     if (!user) {
-      return res.status(401).send({ status: 401, message: 'User not found' });
+      return res.status(404).send({ status: 404, message: 'User not found' });
     }
 
     if (user.state === 0) {
       return res.status(403).send({ status: 403, message: 'Account Banned' });
     }
 
-    const isValidPassword = await bcrypt.compareSync(req.body.password, user.password);
+    const isValidPassword =  bcrypt.compareSync(req.body.password, user.password);
     if (!isValidPassword) {
       return res.status(403).send({ status: 403, accessToken: null, message: 'Invalid Credentials' });
     }
