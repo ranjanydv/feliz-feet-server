@@ -8,13 +8,12 @@ const authConfig = require('../config/auth.config');
 
 const authenticateUser = (req, res, next) => {
   const bearerHeader = req.headers['authorization'];
-
   if (typeof bearerHeader !== 'undefined') {
     const bearerToken = bearerHeader.split(' ')[1];
-    jwt.verify(bearerToken,authConfig.secret , (err, authData) => {
+    jwt.verify(bearerToken, authConfig.secret, (err, authData) => {
       if (err) {
         console.log("🚀 ~ file: authentication.js:16 ~ jwt.verify ~ err:", err)
-        res.sendStatus(401); // Unauthenticated
+        res.status(401).json({ message: "Invalid Token" }); // Unauthenticated
       } else {
         req.authData = authData;
         console.log();

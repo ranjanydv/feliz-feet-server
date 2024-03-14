@@ -55,6 +55,32 @@ async function getUser(req, res, next) {
   }
 }
 
+const showCurrentUser = async (req, res) => {
+  const user = await User.findOne({
+    where: {
+      id: req.authData.user_id
+    },
+    attributes: { exclude: ['password'] },
+  })
+  res.status(200).json({ message: 'User fetched successfully', user });
+}
+
+async function showMe(req, res, next) {
+  try {
+    const { params } = req;
+    const validator = new UserValidation({}, 'byId');
+    if (validator.validate({ ...params })) {
+      const response = await User.findById(params.id);
+      res.json(response);
+    } else {
+      res.status(400);
+      res.json({ status: 400, message: 'Could not fetch user', errors: validator.errors });
+    }
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function upgradeToSeller(req, res, next) {
   try {
     const { body, params } = req;
@@ -104,5 +130,5 @@ async function updateUserRole(req, res, next) {
 }
 
 module.exports = {
-  userList, getUser, upgradeToSeller, updateUserRole,
+  userList, getUser, upgradeToSeller, updateUserRole, showCurrentUser
 };

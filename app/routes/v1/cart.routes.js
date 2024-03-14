@@ -8,6 +8,6 @@ app.post("/",controller.addProductToCart)
 // app.get('/cart/byproduct/:id', authenticateUser, controller.getOrdersByProduct);
 // app.patch('/:id', authenticateUser, controller.updateOrder);
 // app.patch('/cancel/:id', authenticateUser, controller.cancelOrder);
-app.delete("/byuser/:userId/:id",controller.removeProductFromCart)
+app.delete("/byuser/:productId",authenticateUser, controller.removeProductFromCart)
 
 module.exports = app;

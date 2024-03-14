@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+// const { Op } = require('sequelize');
 
 const {
   sequelize,
@@ -37,11 +37,11 @@ async function getCartByUser(req, res, next) {
         products: []
       };
       const cartExists = await Cart.findOne({ where: { user_id: params.id } });
-      console.log(cartExists);
+      // console.log(cartExists);
       const { count, rows: data } = await CartProducts.findAndCountAll({
         where: condition, order: [['updated_at', 'DESC']], ...clause,
       });
-      console.log(count, data);
+      // console.log(count, data);
       return res.json({ count, data });
     } else {
       res.status(400).json({ status: 400, message: 'Could not fetch cart items', errors: validator.errors });
@@ -80,7 +80,7 @@ async function addProductToCart(req, res, next) {
     };
 
     const cartData = await CartProducts.create(data);
-    res.status(201).send({ message: 'Added to Cart', product: cartData, });
+    res.status(201).send({ message: 'Added to Cart', cartItem: cartData, });
   } catch (error) {
     next(error);
   }
@@ -90,10 +90,11 @@ async function addProductToCart(req, res, next) {
 async function removeProductFromCart(req, res, next) {
   try {
     const { params } = req;
+    console.log(params);
     const productExistsInCart = await CartProducts.findOne({
       where: {
-        product_id: params.id,
-        user_id: params.userId,
+        product_id: params.productId,
+        user_id: req.authData.user_id,
       }
     });
     if (!productExistsInCart) {
@@ -102,11 +103,11 @@ async function removeProductFromCart(req, res, next) {
 
     await CartProducts.destroy({
       where: {
-        product_id: params.id,
-        user_id: params.userId,
+        product_id: params.productId,
+        user_id: req.authData.user_id,
       }
     });
-    return res.status(201).json({ message: 'Product removed from cart' });
+    return res.status(200).json({ message: 'Product removed from cart' });
   } catch (error) {
     next(error);
   }

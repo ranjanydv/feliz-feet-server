@@ -45,7 +45,7 @@ async function signUp(req, res, next) {
     if(userData){
       const createdCartForUser = await Cart.create({user_id:userData.id})
     }
-    res.status(201).send({ message: 'User account Created', user: userData,cart:"Cart Initialized" });
+    res.status(201).send({ message: 'User account Created', user: userData, cart: "Cart Initialized" });
   } catch (error) {
     next(error);
   }
@@ -75,13 +75,20 @@ async function signIn(req, res) {
         user_id: user.id,
         role: user.role,
         username: user.username,
+        state: user.state,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone_number: user.phone,
       },
       config.secret,
       { expiresIn: config.tokenTTL },
     );
+      // { expiresIn: "1d" },
     res.status(200).send({
       id: user.id,
       username: user.username,
+      first_name: user.first_name,
+      last_name: user.last_name,
       accessToken: token,
       expiresIn: config.tokenTTL,
       role: user.role,
@@ -92,7 +99,22 @@ async function signIn(req, res) {
   }
 }
 
+// verifyJWT
+async function verifyToken(req, res, next) {
+  try {
+    // const token = req.headers.authorization.split(' ')[1];
+    const {token} = req.body;
+    const decoded = jwt.verify(token, config.secret);
+    req.user = decoded;
+    res.status(200).send({ status: 200, user: decoded });
+    // next();
+  } catch (err) {
+    res.status(401).send({ status: 401, message: 'Invalid Token' });
+  }
+}
+
 module.exports = {
   signUp,
-  signIn
+  signIn,
+  verifyToken
 };

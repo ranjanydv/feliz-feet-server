@@ -4,6 +4,7 @@ const { authenticateUser } = require('../../middleware');
 
 app.get('/', controller.productList);
 app.get('/:url', controller.singleProduct);
+app.get('/byId/:id', controller.singleProductById);
 app.post('/', authenticateUser, controller.createProduct);
 app.post('/upload', authenticateUser, controller.uploadProductImage);
 app.get('/byuser/:id', controller.productListByUser);

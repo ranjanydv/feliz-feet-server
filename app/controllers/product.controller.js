@@ -95,6 +95,25 @@ async function singleProduct(req, res, next) {
   } catch (error) {
     next(error);
   }
+
+}
+async function singleProductById(req, res, next) {
+  try {
+    const { params } = req;
+
+    const product = await Product.findOne({
+      where: {
+        id: params.id
+      },
+      include: [{ model: ProductImage, as: 'image' }],
+    });
+
+    if (!product) return res.status(404).send({ status: 404, message: 'Product Not Found' });
+    return res.status(200).json({ product });
+
+  } catch (error) {
+    next(error);
+  }
 }
 
 async function createProduct(req, res, next) {
@@ -256,6 +275,7 @@ module.exports = {
   productList,
   productListByUser,
   singleProduct,
+  singleProductById,
   updateProduct,
   deleteProduct,
   uploadProductImage,
