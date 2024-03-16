@@ -3,7 +3,7 @@ module.exports = {
   USER: "Ranjan",
   PASSWORD: "Ranjan@123",
   DB: "feliz_feet",
-  dialect: "mysql",
+  dialect: "mariadb",
   logging: console.log,
   pool: {
     max: 5,
