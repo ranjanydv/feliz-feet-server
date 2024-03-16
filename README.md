@@ -19,4 +19,12 @@ Install feliz feet with yarn
     npm i -g yarn
     cd feliz-feet-server
     yarn install
+    yarn run dev
+```
+
+## Setup Frontend
+```bash
+    cd feliz-feet-client
+    npm install
+    npm run dev
 ```
