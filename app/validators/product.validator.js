@@ -15,9 +15,9 @@ const createSchema = Joi.object({
   quantity: Joi.number().required(),
   price: Joi.number().required(),
   offer_price: Joi.number(),
-  state: Joi.string().required(),
+  state: Joi.string(),
   image_id: Joi.string(),
-  user_id: Joi.string().required(),
+  user_id: Joi.string(),
 });
 
 const updateSchema = Joi.object({

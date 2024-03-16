@@ -118,16 +118,17 @@ async function singleProductById(req, res, next) {
 
 async function createProduct(req, res, next) {
   try {
-    const { body } = req;
+    const { body,authData } = req;
     const validator = new ProductValidation({}, 'create');
 
     if (!validator.validate(body)) {
       return res.status(400).send({ status: 400, message: validator.errors });
     }
+    const product = { ...validator.value };
     // Check if user is seller or admin
-    const productUser = await User.findById(body.user_id);
-    if (!productUser) return res.status(400).send({ status: 400, message: 'Unknown User' });
-    if (productUser.role === 0) return res.status(400).send({ status: 400, message: 'Not a Seller' });
+    // const productUser = await User.findById(req.authData.user_id);
+    // if (!productUser) return res.status(400).send({ status: 400, message: 'Unknown User' });
+    if (authData.role === 0) return res.status(400).send({ status: 400, message: 'Not a Seller' });
 
     const productExists = await Product.findOne({
       where: { url: body.url },
@@ -136,8 +137,11 @@ async function createProduct(req, res, next) {
       return res.status(409).send({ status: 409, message: 'Product with URL Already Exist!' });
     }
 
-    const productData = await Product.create(body);
-    res.status(201).send({ message: 'Product Created', product: productData, });
+    // console.log(authData)
+    // console.log(product)
+    product.user_id = authData.user_id;
+    const productData = await Product.create(product);
+    res.status(201).send({ message: 'Product Created', product:productData, });
   } catch (error) {
     next(error);
   }
@@ -202,9 +206,9 @@ async function deleteProduct(req, res, next) {
       // Check for associated product & purchase
       let errorMessage = 'Cannot delete product due to associated records in: ';
 
-      // const product = await Product.findAll({ where: { supplier_id: params.id } });
+      // const CartItems = await CartP.findAll({ where: { supplier_id: params.id } });
       // const purchase = await Purchase.findAll({ where: { supplier_id: params.id } });
-      //
+      
       // let associatedTables = [];
       //
       // // Check constraints and add to the associatedTables array

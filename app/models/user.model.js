@@ -39,9 +39,25 @@ module.exports = (sequelize, DataTypes) => {
         comment: "0 - USER, 1 - SELLER, 2 - ADMIN",
       },
       phone: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: true,
       },
+      street_address:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      city:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      province:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      zip_code:{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      }
     },
     {}
   );

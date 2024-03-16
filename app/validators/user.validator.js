@@ -8,26 +8,36 @@ const listSchema = Joi.object({
 });
 
 const createSchema = Joi.object({
-  first_name: Joi.string(),
-  last_name: Joi.string(),
   username: Joi.string().required(),
   password: Joi.string().required(),
+  first_name: Joi.string(),
+  last_name: Joi.string(),
   phone: Joi.string(),
+  street_address: Joi.string(),
+  city:Joi.string(),
+  province:Joi.string(),
+  zip_code:Joi.string(),
 });
 
 const updateSchema = Joi.object({
   id: Joi.number().required(),
   username: Joi.string(),
   password: Joi.string(),
+  first_name: Joi.string(),
+  last_name: Joi.string(),
   state: Joi.number(),
   role:Joi.number(),
-  token: Joi.string(),
   phone: Joi.string(),
+  street_address: Joi.string(),
+  city:Joi.string(),
+  province:Joi.string(),
+  zip_code:Joi.string(),
 });
 
 const updatePwdSchema = Joi.object({
   id: Joi.number().required(),
-  password: Joi.string().required(),
+  currentPassword: Joi.string().required(),
+  newPassword: Joi.string().required(),
 });
 
 const updateState = Joi.object({
