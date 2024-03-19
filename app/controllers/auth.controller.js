@@ -1,12 +1,12 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-const config = require('../config/auth.config');
-const { user: User, Sequelize,cart:Cart } = require('../models');
-const UserValidator = require('../validators/user.validator');
+const config = require("../config/auth.config");
+const { user: User, Sequelize, cart: Cart } = require("../models");
+const UserValidator = require("../validators/user.validator");
+const createTokenUser = require("../utils/createTokenUser");
 
 // const Op = Sequelize.Op;
-
 
 // Prepare user for data entry
 function prepareUser(body) {
@@ -21,7 +21,7 @@ function prepareUser(body) {
 async function signUp(req, res, next) {
   try {
     const { body } = req;
-    const validator = new UserValidator({}, 'create');
+    const validator = new UserValidator({}, "create");
 
     if (!validator.validate(body)) {
       return res.status(400).send({ status: 400, message: validator.errors });
@@ -31,26 +31,31 @@ async function signUp(req, res, next) {
       where: { username: user.username },
     });
     if (userExist) {
-      return res.status(409).send({ status: 409, message: 'Account Already Exist!' });
+      return res
+        .status(409)
+        .send({ status: 409, message: "Account Already Exist!" });
     }
 
     // Make the first user ADMIN by default
-    const userList = await User.findAndCountAll({})
+    const userList = await User.findAndCountAll({});
     if (userList.count === 0) {
       user.role = 2;
     }
 
     // Rest of the users will be assigned USER Role by Default
     const userData = await User.create(user);
-    if(userData){
-      const createdCartForUser = await Cart.create({user_id:userData.id})
+    if (userData) {
+      const createdCartForUser = await Cart.create({ user_id: userData.id });
     }
-    res.status(201).send({ message: 'User account Created', user: userData, cart: "Cart Initialized" });
+    res.status(201).send({
+      message: "User account Created",
+      user: userData,
+      cart: "Cart Initialized",
+    });
   } catch (error) {
     next(error);
   }
 }
-
 
 // Sign In Function
 async function signIn(req, res) {
@@ -59,40 +64,58 @@ async function signIn(req, res) {
       where: { username: req.body.username },
     });
     if (!user) {
-      return res.status(404).send({ status: 404, message: 'User not found' });
+      return res.status(404).send({ status: 404, message: "User not found" });
     }
 
     if (user.state === 0) {
-      return res.status(403).send({ status: 403, message: 'Account Banned' });
+      return res.status(403).send({ status: 403, message: "Account Banned" });
     }
 
-    const isValidPassword =  bcrypt.compareSync(req.body.password, user.password);
-    if (!isValidPassword) {
-      return res.status(403).send({ status: 403, accessToken: null, message: 'Invalid Credentials' });
-    }
-    const token = jwt.sign(
-      {
-        user_id: user.id,
-        role: user.role,
-        username: user.username,
-        state: user.state,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        phone_number: user.phone,
-      },
-      config.secret,
-      { expiresIn: config.tokenTTL },
+    const isValidPassword = bcrypt.compareSync(
+      req.body.password,
+      user.password
     );
-      // { expiresIn: "1d" },
+    if (!isValidPassword) {
+      return res.status(403).send({
+        status: 403,
+        accessToken: null,
+        message: "Invalid Credentials",
+      });
+    }
+    // console.log(user);
+    // const token = jwt.sign(
+    //   {
+    //     user_id: user.id,
+    //     role: user.role,
+    //     username: user.username,
+    //     state: user.state,
+    //     first_name: user.first_name,
+    //     last_name: user.last_name,
+    //     phone_number: user.phone,
+    //     street_address: user.street_address,
+    //     city: user.city,
+    //     province: user.province,
+    //     zip_code: user.zip_code,
+    //   },
+    //   config.secret,
+    //   { expiresIn: config.tokenTTL }
+    // );
+    const token = createTokenUser(user);
+    console.log(token);
     res.status(200).send({
       id: user.id,
       username: user.username,
       first_name: user.first_name,
       last_name: user.last_name,
-      accessToken: token,
-      expiresIn: config.tokenTTL,
       role: user.role,
       state: user.state,
+      phone_number: user.phone,
+      street_address: user.street_address,
+      city: user.city,
+      province: user.province,
+      zip_code: user.zip_code,
+      accessToken: token,
+      expiresIn: config.tokenTTL,
     });
   } catch (err) {
     res.status(500).send({ status: 500, message: err.message });
@@ -103,18 +126,18 @@ async function signIn(req, res) {
 async function verifyToken(req, res, next) {
   try {
     // const token = req.headers.authorization.split(' ')[1];
-    const {token} = req.body;
+    const { token } = req.body;
     const decoded = jwt.verify(token, config.secret);
     req.user = decoded;
     res.status(200).send({ status: 200, user: decoded });
     // next();
   } catch (err) {
-    res.status(401).send({ status: 401, message: 'Invalid Token' });
+    res.status(401).send({ status: 401, message: "Invalid Token" });
   }
 }
 
 module.exports = {
   signUp,
   signIn,
-  verifyToken
+  verifyToken,
 };

@@ -1,17 +1,18 @@
-const { Op } = require('sequelize');
-const bcrypt = require('bcryptjs');
+const { Op } = require("sequelize");
+const bcrypt = require("bcryptjs");
 
-const { user: User, Sequelize } = require('../models');
-const UserValidation = require('../validators/user.validator');
-
+const { user: User, Sequelize } = require("../models");
+const UserValidation = require("../validators/user.validator");
+const createTokenUser = require("../utils/createTokenUser");
+const config = require("../config/auth.config");
 
 async function userList(req, res, next) {
   try {
     const { query, currentUser } = req;
-    const validator = new UserValidation({}, 'list');
+    const validator = new UserValidation({}, "list");
 
     if (validator.validate(query)) {
-      const { page = 0, limit = 0, query = '' } = validator.value;
+      const { page = 0, limit = 0, query = "" } = validator.value;
       const offset = (page - 1) * limit;
       const condition = {};
       const clause = {};
@@ -27,28 +28,37 @@ async function userList(req, res, next) {
         };
       }
       const { count, rows: data } = await User.findAndCountAll({
-        where: condition, order: [['created_at', 'DESC']], ...clause,
+        where: condition,
+        order: [["created_at", "DESC"]],
+        ...clause,
       });
       return res.json({ count, data });
     } else {
-      res.status(400).json({ status: 400, message: 'Could not fetch user list', errors: validator.errors });
+      res.status(400).json({
+        status: 400,
+        message: "Could not fetch user list",
+        errors: validator.errors,
+      });
     }
   } catch (error) {
     next(error);
   }
 }
 
-
 async function getUser(req, res, next) {
   try {
     const { params } = req;
-    const validator = new UserValidation({}, 'byId');
+    const validator = new UserValidation({}, "byId");
     if (validator.validate({ ...params })) {
       const response = await User.findById(params.id);
       res.json(response);
     } else {
       res.status(400);
-      res.json({ status: 400, message: 'Could not fetch user', errors: validator.errors });
+      res.json({
+        status: 400,
+        message: "Could not fetch user",
+        errors: validator.errors,
+      });
     }
   } catch (error) {
     next(error);
@@ -56,36 +66,46 @@ async function getUser(req, res, next) {
 }
 
 const showCurrentUser = async (req, res) => {
+  console.log(req.authData);
   const user = await User.findOne({
     where: {
-      id: req.authData.user_id
+      id: req.authData.user_id,
     },
-    attributes: { exclude: ['password'] },
-  })
-  res.status(200).json({ message: 'User fetched successfully', user });
-}
+    attributes: { exclude: ["password"] },
+  });
+  res.status(200).json({ message: "User fetched successfully", user });
+};
 
 async function upgradeToSeller(req, res, next) {
   try {
     const { body, params } = req;
-    const validator = new UserValidation({}, 'update');
+    const validator = new UserValidation({}, "update");
     if (validator.validate({ ...params, ...body })) {
       const user = { ...validator.value };
       const databaseUser = await User.findById(params.id);
       if (user.role) {
         if (databaseUser.role === 2) {
-          res.status(400).json({ status: 400, message: 'Cannot demote Admin to seller' });
+          res
+            .status(400)
+            .json({ status: 400, message: "Cannot demote Admin to seller" });
           return;
         }
         if (databaseUser.role === 0) {
-          const data = await User.update({ role: 1 }, { where: { id: user.id } });
+          const data = await User.update(
+            { role: 1 },
+            { where: { id: user.id } }
+          );
           res.status(200).json(data);
         } else {
-          res.status(400).json({ status: 400, message: 'Already a seller' });
+          res.status(400).json({ status: 400, message: "Already a seller" });
         }
       }
     } else {
-      res.status(400).json({ status: 400, message: 'Could not update user role', errors: validator.errors });
+      res.status(400).json({
+        status: 400,
+        message: "Could not update user role",
+        errors: validator.errors,
+      });
     }
   } catch (error) {
     next(error);
@@ -95,18 +115,25 @@ async function upgradeToSeller(req, res, next) {
 async function updateUserRole(req, res, next) {
   try {
     const { body, params } = req;
-    const validator = new UserValidation({}, 'update');
+    const validator = new UserValidation({}, "update");
     if (validator.validate({ ...params, ...body })) {
       const user = { ...validator.value };
       console.log(user);
       if (user.role) {
         // if (user.role === 0)
-        const data = await User.update({ role: user.role }, { where: { id: user.id } });
+        const data = await User.update(
+          { role: user.role },
+          { where: { id: user.id } }
+        );
         res.json(data);
       }
     } else {
       res.status(400);
-      res.json({ status: 400, message: 'Could not update user', errors: validator.errors });
+      res.json({
+        status: 400,
+        message: "Could not update user",
+        errors: validator.errors,
+      });
     }
   } catch (error) {
     next(error);
@@ -119,7 +146,7 @@ async function banUser(req, res, next) {
     console.log(params.id);
     const userExists = await User.findById(params.id);
     if (!userExists) {
-      return res.status(404).json({ status: 404, message: 'User not found' });
+      return res.status(404).json({ status: 404, message: "User not found" });
     }
     const data = await User.update({ state: 0 }, { where: { id: params.id } });
     res.json(data);
@@ -131,19 +158,19 @@ async function banUser(req, res, next) {
 async function updateUser(req, res, next) {
   try {
     const { body, params } = req;
-    const validator = new UserValidation({}, 'update');
+    const validator = new UserValidation({}, "update");
 
     if (validator.validate({ ...params, ...body })) {
       const user = { ...validator.value };
-      if(req.authData.role !==2){
-        if(req.authData.user_id !== params.id){
-          return res.status(401).json({ status: 401, message: 'Unauthorized' });
+      if (req.authData.role !== 2) {
+        if (req.authData.user_id !== params.id) {
+          return res.status(401).json({ status: 401, message: "Unauthorized" });
         }
       }
 
       const userExists = await User.findById(params.id);
       if (!userExists) {
-        return res.status(404).json({ status: 404, message: 'User not found' });
+        return res.status(404).json({ status: 404, message: "User not found" });
       }
 
       const data = {
@@ -156,49 +183,84 @@ async function updateUser(req, res, next) {
         zip_code: user.zip_code,
       };
 
-      const updatedUser = await User.update(data, {where: { id: params.id }});
-
-      res.json(updatedUser);
+      await User.update(data, { where: { id: params.id } });
+      const updatedUser = await User.findById(params.id);
+      const token = createTokenUser(updatedUser);
+      res.status(200).send({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        first_name: updatedUser.first_name,
+        last_name: updatedUser.last_name,
+        role: updatedUser.role,
+        state: updatedUser.state,
+        phone_number: updatedUser.phone,
+        street_address: updatedUser.street_address,
+        city: updatedUser.city,
+        province: updatedUser.province,
+        zip_code: updatedUser.zip_code,
+        accessToken: token,
+        expiresIn: config.tokenTTL,
+      });
     } else {
       res.status(400);
-      res.json({ status: 400, message: 'Could not update user', errors: validator.errors });
+      res.json({
+        status: 400,
+        message: "Could not update user",
+        errors: validator.errors,
+      });
     }
   } catch (error) {
     next(error);
   }
 }
 
-const updateUserPassword = async (req, res,next) => {
+const updateUserPassword = async (req, res, next) => {
   try {
-
     const { body, params } = req;
-    const validator = new UserValidation({}, 'updatePwd');
+    const validator = new UserValidation({}, "updatePwd");
     if (validator.validate({ ...params, ...body })) {
       const user = { ...validator.value };
       const databaseUser = await User.findById(params.id);
       if (!databaseUser) {
-        res.status(404).json({ status: 404, message: 'User not found' });
+        res.status(404).json({ status: 404, message: "User not found" });
       }
 
-      const isMatch = await bcrypt.compareSync(user.currentPassword, databaseUser.password)
+      const isMatch = await bcrypt.compareSync(
+        user.currentPassword,
+        databaseUser.password
+      );
       if (!isMatch) {
-        res.status(400).json({ status: 400, message: 'Old password does not match' });
+        res
+          .status(400)
+          .json({ status: 400, message: "Old password does not match" });
       }
 
       const hashedPassword = await bcrypt.hash(user.newPassword, 10);
 
-      const data = await User.update({ password: hashedPassword }, { where: { id: user.id } });
+      const data = await User.update(
+        { password: hashedPassword },
+        { where: { id: user.id } }
+      );
       res.status(200).json(data);
-
     } else {
-      res.status(400).json({ status: 400, message: 'Could not update user password', errors: validator.errors });
+      res.status(400).json({
+        status: 400,
+        message: "Could not update user password",
+        errors: validator.errors,
+      });
     }
   } catch (error) {
     next(error);
   }
-}
-
+};
 
 module.exports = {
-  userList, getUser, upgradeToSeller, updateUserRole, showCurrentUser,updateUser,updateUserPassword,banUser
+  userList,
+  getUser,
+  upgradeToSeller,
+  updateUserRole,
+  showCurrentUser,
+  updateUser,
+  updateUserPassword,
+  banUser,
 };
