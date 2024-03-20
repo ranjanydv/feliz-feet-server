@@ -78,34 +78,35 @@ const showCurrentUser = async (req, res) => {
 
 async function upgradeToSeller(req, res, next) {
   try {
-    const { body, params } = req;
-    const validator = new UserValidation({}, "update");
-    if (validator.validate({ ...params, ...body })) {
-      const user = { ...validator.value };
-      const databaseUser = await User.findById(params.id);
-      if (user.role) {
-        if (databaseUser.role === 2) {
-          res
-            .status(400)
-            .json({ status: 400, message: "Cannot demote Admin to seller" });
-          return;
-        }
-        if (databaseUser.role === 0) {
-          const data = await User.update(
-            { role: 1 },
-            { where: { id: user.id } }
-          );
-          res.status(200).json(data);
-        } else {
-          res.status(400).json({ status: 400, message: "Already a seller" });
-        }
-      }
-    } else {
-      res.status(400).json({
-        status: 400,
-        message: "Could not update user role",
-        errors: validator.errors,
+    const { body, params, authData } = req;
+    const databaseUser = await User.findById(authData.user_id);
+    if (databaseUser.role === 2) {
+      res
+        .status(400)
+        .json({ status: 400, message: "Cannot demote Admin to seller" });
+      return;
+    }
+    if (databaseUser.role === 0) {
+      await User.update({ role: 1 }, { where: { id: authData.user_id } });
+      const updatedUser = await User.findById(authData.user_id);
+      const token = createTokenUser(updatedUser);
+      res.status(200).send({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        first_name: updatedUser.first_name,
+        last_name: updatedUser.last_name,
+        role: updatedUser.role,
+        state: updatedUser.state,
+        phone_number: updatedUser.phone,
+        street_address: updatedUser.street_address,
+        city: updatedUser.city,
+        province: updatedUser.province,
+        zip_code: updatedUser.zip_code,
+        accessToken: token,
+        expiresIn: config.tokenTTL,
       });
+    } else {
+      res.status(400).json({ status: 400, message: "Already a seller" });
     }
   } catch (error) {
     next(error);
@@ -157,13 +158,13 @@ async function banUser(req, res, next) {
 
 async function updateUser(req, res, next) {
   try {
-    const { body, params } = req;
+    const { body, params, authData } = req;
     const validator = new UserValidation({}, "update");
 
     if (validator.validate({ ...params, ...body })) {
       const user = { ...validator.value };
-      if (req.authData.role !== 2) {
-        if (req.authData.user_id !== params.id) {
+      if (authData.role !== 2) {
+        if (authData.user_id != params.id) {
           return res.status(401).json({ status: 401, message: "Unauthorized" });
         }
       }
