@@ -1,10 +1,9 @@
 module.exports = {
-  HOST: "dpg-cnt94un79t8c73acalj0-a",
-  USER: "feliz_feet_4mxn_user",
-  PASSWORD: "AbsnWVt5Iv73ZXWD8UZ5e1fDcyAf7AIl",
-  DB: "feliz_feet_4mxn",
-  dialect: "postgres",
-  port:5432,
+  HOST: "localhost",
+  USER: "root",
+  PASSWORD: "",
+  DB: "feliz_feet",
+  dialect: "mariadb",
   logging: console.log,
   pool: {
     max: 5,
