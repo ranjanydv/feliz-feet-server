@@ -8,7 +8,7 @@ the backend of feliz feet server
 ## Setup
 
 ## Connect to MariaDB through apache
-1. Install Xampp
+1. Install Xampp or mySQL server
 2. click here to go to [PhpMyAdmin](http://localhost/phpmyadmin)
 3. create a database named feliz_feet
 4. Now run the backend
@@ -16,15 +16,15 @@ the backend of feliz feet server
 Install feliz feet with yarn
 
 ```bash
-    npm i -g yarn
+    npm i -g pnpm
     cd feliz-feet-server
-    yarn install
-    yarn run dev
+    pnpm install
+    pnpm dev
 ```
 
 ## Setup Frontend
 ```bash
     cd feliz-feet-client
-    npm install
-    npm run dev
+    pnpm install
+    pnpm dev
 ```
